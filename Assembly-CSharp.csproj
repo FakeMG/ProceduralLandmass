@@ -56,9 +56,13 @@
     <Analyzer Include="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\Microsoft\Visual Studio Tools for Unity\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Script\Noise.cs" />
-    <Compile Include="Assets\Script\MapDisplay.cs" />
+    <Compile Include="Assets\Script\MeshGenerator.cs" />
     <Compile Include="Assets\Script\MapGenerator.cs" />
+    <Compile Include="Assets\Script\TextureGenerators.cs" />
+    <Compile Include="Assets\Script\Noise.cs" />
+    <Compile Include="Assets\Script\EndlessTerrain.cs" />
+    <Compile Include="Assets\Script\MapDisplay.cs" />
+    <Compile Include="Assets\Script\FalloffGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
