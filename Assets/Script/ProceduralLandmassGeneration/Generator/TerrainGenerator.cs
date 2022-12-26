@@ -64,7 +64,9 @@ namespace ProceduralLandmassGeneration.Generator {
             void UpdateVisibleChunks() {
                 for (int i = _visibleTerrainChunksList.Count - 1; i >= 0; i--) {
                     _visibleTerrainChunksList[i].UpdateTerrainChunk();
-                    alreadyUpdatedChunkCoords.Add(_visibleTerrainChunksList[i].Coord);
+                    if (i < _visibleTerrainChunksList.Count) {
+                        alreadyUpdatedChunkCoords.Add(_visibleTerrainChunksList[i].Coord);
+                    }
                 }
             }
 
