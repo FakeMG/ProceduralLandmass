@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace ProceduralLandmassGeneration.Generator {
+namespace ProceduralLandmassGeneration {
 	public static class TextureGenerator {
 
 		public static Texture2D TextureFromColourMap(Color[] colourMap, int width, int height) {

@@ -1,8 +1,8 @@
-﻿using ProceduralLandmassGeneration.Generator.Data;
-using ProceduralLandmassGeneration.Generator.Generator.NoiseGenerator;
+﻿using ProceduralLandmassGeneration.Data;
+using ProceduralLandmassGeneration.NoiseGenerator;
 using UnityEngine;
 
-namespace ProceduralLandmassGeneration.Generator {
+namespace ProceduralLandmassGeneration {
     public class MapPreview : MonoBehaviour {
         public Renderer textureRender;
         public MeshFilter meshFilter;

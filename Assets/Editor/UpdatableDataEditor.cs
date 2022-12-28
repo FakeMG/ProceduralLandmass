@@ -1,4 +1,4 @@
-using ProceduralLandmassGeneration.Generator.Data;
+using ProceduralLandmassGeneration.Data;
 using UnityEditor;
 using UnityEngine;
 

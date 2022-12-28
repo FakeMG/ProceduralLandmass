@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ProceduralLandmassGeneration.Generator.Generator.NoiseGenerator {
+namespace ProceduralLandmassGeneration.NoiseGenerator {
     public static class Noise {
         public enum NormalizeMode {
             Local,

@@ -1,7 +1,7 @@
-using ProceduralLandmassGeneration.Generator.Generator.NoiseGenerator;
+using ProceduralLandmassGeneration.NoiseGenerator;
 using UnityEngine;
 
-namespace ProceduralLandmassGeneration.Generator.Data {
+namespace ProceduralLandmassGeneration.Data {
     [CreateAssetMenu()]
     public class HeightMapSettings : UpdatableData {
         public NoiseSettings noiseSettings;

@@ -1,7 +1,7 @@
-﻿using ProceduralLandmassGeneration.Generator.Data;
+﻿using ProceduralLandmassGeneration.Data;
 using UnityEngine;
 
-namespace ProceduralLandmassGeneration.Generator {
+namespace ProceduralLandmassGeneration {
     public class TerrainChunk {
         public event System.Action<TerrainChunk, bool> OnVisibilityChanged;
         // coordinate: ...,-2,-1,0,1,2,...
