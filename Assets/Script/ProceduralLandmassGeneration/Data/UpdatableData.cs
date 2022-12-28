@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ProceduralLandmassGeneration.Generator.Data {
+namespace ProceduralLandmassGeneration.Data {
     public class UpdatableData : ScriptableObject {
         public event System.Action OnValuesUpdated;
         public bool autoUpdate;

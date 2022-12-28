@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ProceduralLandmassGeneration.Generator.Data {
+namespace ProceduralLandmassGeneration.Data {
     [CreateAssetMenu()]
     public class MeshSettings : UpdatableData {
         public const int numSupportedLODs = 5;

@@ -1,7 +1,7 @@
-﻿using ProceduralLandmassGeneration.Generator.Data;
+﻿using ProceduralLandmassGeneration.Data;
 using UnityEngine;
 
-namespace ProceduralLandmassGeneration.Generator {
+namespace ProceduralLandmassGeneration {
     public static class MeshGenerator {
         public static MeshData GenerateMeshData(float[,] heightMap, MeshSettings meshSettings, int levelOfDetail) {
             int skipIncrement = (levelOfDetail == 0) ? 1 : levelOfDetail * 2;

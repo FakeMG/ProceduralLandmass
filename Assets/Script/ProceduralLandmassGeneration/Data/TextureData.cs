@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace ProceduralLandmassGeneration.Generator.Data {
+namespace ProceduralLandmassGeneration.Data {
     [CreateAssetMenu()]
     public class TextureData : UpdatableData {
         public Color[] baseColours;

@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
-using ProceduralLandmassGeneration.Generator.Data;
+using ProceduralLandmassGeneration.Data;
 using UnityEngine;
 
-namespace ProceduralLandmassGeneration.Generator {
+namespace ProceduralLandmassGeneration {
     public class TerrainGenerator : MonoBehaviour {
         private const float VIEWER_MOVE_THRESHOLD_FOR_CHUNK_UPDATE = 25f;
 
         private const float SQR_VIEWER_MOVE_THRESHOLD_FOR_CHUNK_UPDATE =
             VIEWER_MOVE_THRESHOLD_FOR_CHUNK_UPDATE * VIEWER_MOVE_THRESHOLD_FOR_CHUNK_UPDATE;
 
-        public int colliderLODIndex;
+        [Min(0)] public int colliderLODIndex;
         public LODInfo[] detailLevels;
 
         public MeshSettings meshSettings;

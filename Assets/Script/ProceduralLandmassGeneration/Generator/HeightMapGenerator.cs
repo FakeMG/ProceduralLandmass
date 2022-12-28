@@ -1,8 +1,8 @@
-﻿using ProceduralLandmassGeneration.Generator.Data;
-using ProceduralLandmassGeneration.Generator.Generator.NoiseGenerator;
+﻿using ProceduralLandmassGeneration.Data;
+using ProceduralLandmassGeneration.NoiseGenerator;
 using UnityEngine;
 
-namespace ProceduralLandmassGeneration.Generator {
+namespace ProceduralLandmassGeneration {
     public static class HeightMapGenerator {
         public static HeightMap GenerateHeightMap(int width, int height, HeightMapSettings heightMapSettings,
             Vector2 sampleCenter) {
