@@ -34,7 +34,7 @@ namespace ProceduralLandmassGeneration {
             textureSettings.UpdateMeshHeights(mapMaterial, heightMapSettings.minHeight, heightMapSettings.maxHeight);
 
             float maxViewDst = detailLevels[detailLevels.Length - 1].visibleDstThreshold;
-            _meshWorldSize = meshSettings.meshWorldSize;
+            _meshWorldSize = meshSettings.MeshWorldSize;
             _chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst / _meshWorldSize);
 
             UpdateChunksThatPlayerPassThrough();
@@ -114,7 +114,7 @@ namespace ProceduralLandmassGeneration {
 
     [System.Serializable]
     public struct LODInfo {
-        [Range(0, MeshSettings.numSupportedLODs - 1)]
+        [Range(0, MeshSettings.NUM_SUPPORTED_LODS - 1)]
         public int lod;
 
         public float visibleDstThreshold;

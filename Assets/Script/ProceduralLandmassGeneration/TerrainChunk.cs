@@ -1,4 +1,5 @@
 ﻿using ProceduralLandmassGeneration.Data;
+using ProceduralLandmassGeneration.Generator.Mesh;
 using UnityEngine;
 
 namespace ProceduralLandmassGeneration {
@@ -41,9 +42,9 @@ namespace ProceduralLandmassGeneration {
             _meshSettings = meshSettings;
             _viewer = viewer;
 
-            _sampleCenter = coord * meshSettings.meshWorldSize / meshSettings.meshScale;
-            Vector2 chunkPosition = coord * meshSettings.meshWorldSize;
-            _bounds = new Bounds(chunkPosition, Vector2.one * meshSettings.meshWorldSize);
+            _sampleCenter = coord * meshSettings.MeshWorldSize / meshSettings.meshScale;
+            Vector2 chunkPosition = coord * meshSettings.MeshWorldSize;
+            _bounds = new Bounds(chunkPosition, Vector2.one * meshSettings.MeshWorldSize);
 
             _meshObject = new GameObject("Terrain Chunk");
             _meshRenderer = _meshObject.AddComponent<MeshRenderer>();
@@ -74,7 +75,7 @@ namespace ProceduralLandmassGeneration {
         // used when being created
         public void RequestHeightMap() {
             ThreadedDataRequester.RequestData(
-                () => HeightMapGenerator.GenerateHeightMap(_meshSettings.numVertsPerLine, _meshSettings.numVertsPerLine,
+                () => HeightMapGenerator.GenerateHeightMap(_meshSettings.NumVertsPerLine, _meshSettings.NumVertsPerLine,
                     _heightMapSettings, _sampleCenter), OnHeightMapReceived);
         }
 
@@ -193,8 +194,9 @@ namespace ProceduralLandmassGeneration {
 
         public void RequestMesh(HeightMap heightMap, MeshSettings meshSettings) {
             HasRequestedMesh = true;
+            BlockyMeshGenerator generator = new BlockyMeshGenerator();
             ThreadedDataRequester.RequestData(
-                () => MeshGenerator.GenerateMeshData(heightMap.Values, meshSettings, _lod),
+                () => generator.GenerateMeshData(heightMap.Values, meshSettings, _lod),
                 OnMeshDataReceived);
         }
     }
