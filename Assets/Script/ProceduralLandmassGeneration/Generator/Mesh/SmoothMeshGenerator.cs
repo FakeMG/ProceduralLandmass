@@ -50,6 +50,7 @@ namespace ProceduralLandmassGeneration.Generator.Mesh {
 
                 for (int y = 0; y < numVertsPerLine; y++) {
                     for (int x = 0; x < numVertsPerLine; x++) {
+                        // x,y > 2 because the edge of chunk is render at full resolution for every chunks
                         //(x-2); (y-2) because there are 2 extra verts that are excluded from final mesh
                         bool isSkippedVertex = x > 2 && x < numVertsPerLine - 3 && y > 2 && y < numVertsPerLine - 3 &&
                                                ((x - 2) % skipIncrement != 0 || (y - 2) % skipIncrement != 0);

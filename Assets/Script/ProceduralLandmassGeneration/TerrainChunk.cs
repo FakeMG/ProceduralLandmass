@@ -43,8 +43,8 @@ namespace ProceduralLandmassGeneration {
             _viewer = viewer;
 
             _sampleCenter = coord * meshSettings.MeshWorldSize / meshSettings.meshScale;
-            Vector2 chunkPosition = coord * meshSettings.MeshWorldSize;
-            _bounds = new Bounds(chunkPosition, Vector2.one * meshSettings.MeshWorldSize);
+            Vector2 actualChunkPosition = coord * meshSettings.MeshWorldSize;
+            _bounds = new Bounds(actualChunkPosition, Vector2.one * meshSettings.MeshWorldSize);
 
             _meshObject = new GameObject("Terrain Chunk");
             _meshRenderer = _meshObject.AddComponent<MeshRenderer>();
@@ -52,8 +52,9 @@ namespace ProceduralLandmassGeneration {
             _meshCollider = _meshObject.AddComponent<MeshCollider>();
             _meshRenderer.material = material;
 
-            _meshObject.transform.position = new Vector3(chunkPosition.x, 0, chunkPosition.y);
+            _meshObject.transform.position = new Vector3(actualChunkPosition.x, 0, actualChunkPosition.y);
             _meshObject.transform.parent = parent;
+            _meshObject.name = "sample center: " + _sampleCenter;
             SetVisible(false);
 
             InitializeLODMeshArray();
@@ -75,7 +76,8 @@ namespace ProceduralLandmassGeneration {
         // used when being created
         public void RequestHeightMap() {
             ThreadedDataRequester.RequestData(
-                () => HeightMapGenerator.GenerateHeightMap(_meshSettings.NumVertsPerLine, _meshSettings.NumVertsPerLine,
+                () => HeightMapGenerator.GenerateHeightMap((int)_meshSettings.MeshWorldSize + 2,
+                    (int)_meshSettings.MeshWorldSize + 2,
                     _heightMapSettings, _sampleCenter), OnHeightMapReceived);
         }
 

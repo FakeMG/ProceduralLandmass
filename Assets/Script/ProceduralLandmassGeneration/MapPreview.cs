@@ -1,4 +1,5 @@
 ﻿using ProceduralLandmassGeneration.Data;
+using ProceduralLandmassGeneration.Generator;
 using ProceduralLandmassGeneration.NoiseGenerator;
 using ProceduralLandmassGeneration.Generator.Mesh;
 using UnityEngine;
