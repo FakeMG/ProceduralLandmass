@@ -70,63 +70,63 @@ namespace ProceduralLandmassGeneration.Generator.Mesh {
 
                             //world negative y direction
                             if (y > 0 && IsTransparent(_blocks[x, y - 1, z])) {
-                                verts.Add(topLeftOfMesh + new Vector3(currentBlockLocalX, y, currentBlockLocalZ));
                                 verts.Add(topLeftOfMesh +
                                           new Vector3(currentBlockLocalX + 1, y, currentBlockLocalZ));
-                                verts.Add(topLeftOfMesh +
-                                          new Vector3(currentBlockLocalX + 1, y, currentBlockLocalZ - 1));
+                                verts.Add(topLeftOfMesh + new Vector3(currentBlockLocalX, y, currentBlockLocalZ));
                                 verts.Add(topLeftOfMesh +
                                           new Vector3(currentBlockLocalX, y, currentBlockLocalZ - 1));
+                                verts.Add(topLeftOfMesh +
+                                          new Vector3(currentBlockLocalX + 1, y, currentBlockLocalZ - 1));
                                 numFaces++;
                             }
 
                             //world positive z direction
                             if (IsTransparent(_blocks[x, y, z - 1])) {
-                                verts.Add(topLeftOfMesh + new Vector3(currentBlockLocalX, y, currentBlockLocalZ));
-                                verts.Add(topLeftOfMesh +
-                                          new Vector3(currentBlockLocalX + 1, y, currentBlockLocalZ));
                                 verts.Add(topLeftOfMesh +
                                           new Vector3(currentBlockLocalX + 1, y + 1, currentBlockLocalZ));
                                 verts.Add(topLeftOfMesh +
                                           new Vector3(currentBlockLocalX, y + 1, currentBlockLocalZ));
+                                verts.Add(topLeftOfMesh + new Vector3(currentBlockLocalX, y, currentBlockLocalZ));
+                                verts.Add(topLeftOfMesh +
+                                          new Vector3(currentBlockLocalX + 1, y, currentBlockLocalZ));
                                 numFaces++;
                             }
 
                             //world negative z direction
                             if (IsTransparent(_blocks[x, y, z + 1])) {
                                 verts.Add(topLeftOfMesh +
-                                          new Vector3(currentBlockLocalX, y, currentBlockLocalZ - 1));
-                                verts.Add(topLeftOfMesh +
                                           new Vector3(currentBlockLocalX, y + 1, currentBlockLocalZ - 1));
                                 verts.Add(topLeftOfMesh +
                                           new Vector3(currentBlockLocalX + 1, y + 1, currentBlockLocalZ - 1));
                                 verts.Add(topLeftOfMesh +
                                           new Vector3(currentBlockLocalX + 1, y, currentBlockLocalZ - 1));
+                                verts.Add(topLeftOfMesh +
+                                          new Vector3(currentBlockLocalX, y, currentBlockLocalZ - 1));
                                 numFaces++;
                             }
 
                             //world positive x
                             if (IsTransparent(_blocks[x + 1, y, z])) {
                                 verts.Add(topLeftOfMesh +
-                                          new Vector3(currentBlockLocalX + 1, y, currentBlockLocalZ));
-                                verts.Add(topLeftOfMesh +
-                                          new Vector3(currentBlockLocalX + 1, y, currentBlockLocalZ - 1));
-                                verts.Add(topLeftOfMesh +
                                           new Vector3(currentBlockLocalX + 1, y + 1, currentBlockLocalZ - 1));
                                 verts.Add(topLeftOfMesh +
                                           new Vector3(currentBlockLocalX + 1, y + 1, currentBlockLocalZ));
+                                verts.Add(topLeftOfMesh +
+                                          new Vector3(currentBlockLocalX + 1, y, currentBlockLocalZ));
+                                verts.Add(topLeftOfMesh +
+                                          new Vector3(currentBlockLocalX + 1, y, currentBlockLocalZ - 1));
                                 numFaces++;
                             }
 
                             //world negative x
                             if (IsTransparent(_blocks[x - 1, y, z])) {
                                 verts.Add(topLeftOfMesh +
-                                          new Vector3(currentBlockLocalX, y, currentBlockLocalZ));
-                                verts.Add(topLeftOfMesh +
                                           new Vector3(currentBlockLocalX, y + 1, currentBlockLocalZ));
                                 verts.Add(topLeftOfMesh +
                                           new Vector3(currentBlockLocalX, y + 1, currentBlockLocalZ - 1));
                                 verts.Add(topLeftOfMesh + new Vector3(currentBlockLocalX, y, currentBlockLocalZ - 1));
+                                verts.Add(topLeftOfMesh +
+                                          new Vector3(currentBlockLocalX, y, currentBlockLocalZ));
                                 numFaces++;
                             }
 
