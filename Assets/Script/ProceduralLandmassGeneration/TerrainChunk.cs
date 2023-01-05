@@ -2,9 +2,10 @@
 using ProceduralLandmassGeneration.Generator.Mesh;
 using UnityEngine;
 
-namespace ProceduralLandmassGeneration {
+namespace ProceduralLandmassGeneration.Generator {
     public class TerrainChunk {
         public event System.Action<TerrainChunk, bool> OnVisibilityChanged;
+
         // coordinate: ...,-2,-1,0,1,2,...
         // position: position in game world
         public Vector2 Coord;
@@ -15,9 +16,9 @@ namespace ProceduralLandmassGeneration {
         private readonly Vector2 _sampleCenter;
         private Bounds _bounds;
 
-        private readonly MeshRenderer _meshRenderer;
         private readonly MeshFilter _meshFilter;
         private readonly MeshCollider _meshCollider;
+        private readonly IMeshGenerator _meshGenerator;
 
         private readonly LODInfo[] _detailLevels;
         private LODMesh[] _lodMeshes;
@@ -33,40 +34,38 @@ namespace ProceduralLandmassGeneration {
         private readonly MeshSettings _meshSettings;
         private readonly Transform _viewer;
 
-        public TerrainChunk(Vector2 coord, HeightMapSettings heightMapSettings, MeshSettings meshSettings,
-            LODInfo[] detailLevels, int colliderLODIndex, Transform parent, Transform viewer, Material material) {
+        public TerrainChunk(Vector2 coord, TerrainGenerator terrainGenerator) {
             Coord = coord;
-            _detailLevels = detailLevels;
-            _colliderLODIndex = colliderLODIndex;
-            _heightMapSettings = heightMapSettings;
-            _meshSettings = meshSettings;
-            _viewer = viewer;
+            _detailLevels = terrainGenerator.detailLevels;
+            _colliderLODIndex = terrainGenerator.colliderLODIndex;
+            _heightMapSettings = terrainGenerator.heightMapSettings;
+            _meshSettings = terrainGenerator.meshSettings;
+            _viewer = terrainGenerator.viewer;
 
-            _sampleCenter = coord * meshSettings.MeshWorldSize / meshSettings.meshScale;
-            Vector2 actualChunkPosition = coord * meshSettings.MeshWorldSize;
-            _bounds = new Bounds(actualChunkPosition, Vector2.one * meshSettings.MeshWorldSize);
+            _sampleCenter = coord * _meshSettings.MeshWorldSize / _meshSettings.meshScale;
+            Vector2 chunkWorldPosition = coord * _meshSettings.MeshWorldSize;
+            _bounds = new Bounds(chunkWorldPosition, Vector2.one * _meshSettings.MeshWorldSize);
+            _maxViewDst = _detailLevels[_detailLevels.Length - 1].visibleDstThreshold;
 
-            _meshObject = new GameObject("Terrain Chunk");
-            _meshRenderer = _meshObject.AddComponent<MeshRenderer>();
+            _meshGenerator = terrainGenerator.MeshGenerator;
+            _meshObject = new GameObject("Sample center: " + _sampleCenter);
+            var meshRenderer = _meshObject.AddComponent<MeshRenderer>();
+            meshRenderer.material = terrainGenerator.mapMaterial;
             _meshFilter = _meshObject.AddComponent<MeshFilter>();
             _meshCollider = _meshObject.AddComponent<MeshCollider>();
-            _meshRenderer.material = material;
 
-            _meshObject.transform.position = new Vector3(actualChunkPosition.x, 0, actualChunkPosition.y);
-            _meshObject.transform.parent = parent;
-            _meshObject.name = "sample center: " + _sampleCenter;
+            _meshObject.transform.position = new Vector3(chunkWorldPosition.x, 0, chunkWorldPosition.y);
+            _meshObject.transform.parent = terrainGenerator.transform;
             SetVisible(false);
 
             InitializeLODMeshArray();
 
-            _maxViewDst = detailLevels[detailLevels.Length - 1].visibleDstThreshold;
-
             void InitializeLODMeshArray() {
-                _lodMeshes = new LODMesh[detailLevels.Length];
-                for (int i = 0; i < detailLevels.Length; i++) {
-                    _lodMeshes[i] = new LODMesh(detailLevels[i].lod);
+                _lodMeshes = new LODMesh[_detailLevels.Length];
+                for (int i = 0; i < _detailLevels.Length; i++) {
+                    _lodMeshes[i] = new LODMesh(_detailLevels[i].lod);
                     _lodMeshes[i].UpdateCallback += UpdateTerrainChunk;
-                    if (i == colliderLODIndex) {
+                    if (i == _colliderLODIndex) {
                         _lodMeshes[i].UpdateCallback += UpdateCollisionMesh;
                     }
                 }
@@ -117,7 +116,7 @@ namespace ProceduralLandmassGeneration {
                             _previousLODIndex = lodIndex;
                             _meshFilter.mesh = lodMesh.Mesh;
                         } else if (!lodMesh.HasRequestedMesh) {
-                            lodMesh.RequestMesh(_heightMap, _meshSettings);
+                            lodMesh.RequestMesh(_heightMap, _meshGenerator);
                         }
                     }
                 }
@@ -142,7 +141,7 @@ namespace ProceduralLandmassGeneration {
             void RequestMeshIfPlayerInRange() {
                 if (SqrDstFromViewerToEdge < _detailLevels[_colliderLODIndex].SqrVisibleDstThreshold) {
                     if (!_lodMeshes[_colliderLODIndex].HasRequestedMesh) {
-                        _lodMeshes[_colliderLODIndex].RequestMesh(_heightMap, _meshSettings);
+                        _lodMeshes[_colliderLODIndex].RequestMesh(_heightMap, _meshGenerator);
                     }
                 }
             }
@@ -175,7 +174,7 @@ namespace ProceduralLandmassGeneration {
     }
 
     internal class LODMesh {
-        public Mesh Mesh;
+        public UnityEngine.Mesh Mesh;
         public bool HasRequestedMesh;
         public bool HasMesh;
 
@@ -188,17 +187,16 @@ namespace ProceduralLandmassGeneration {
         }
 
         private void OnMeshDataReceived(object meshDataObject) {
-            Mesh = ((MeshData)meshDataObject).CreateMesh();
+            Mesh = ((IMeshData)meshDataObject).CreateMesh();
             HasMesh = true;
 
             UpdateCallback?.Invoke();
         }
 
-        public void RequestMesh(HeightMap heightMap, MeshSettings meshSettings) {
+        public void RequestMesh(HeightMap heightMap, IMeshGenerator meshGenerator) {
             HasRequestedMesh = true;
-            BlockyMeshGenerator generator = new BlockyMeshGenerator();
             ThreadedDataRequester.RequestData(
-                () => generator.GenerateMeshData(heightMap.Values, meshSettings, _lod),
+                () => meshGenerator.GenerateMeshData(heightMap.Values),
                 OnMeshDataReceived);
         }
     }

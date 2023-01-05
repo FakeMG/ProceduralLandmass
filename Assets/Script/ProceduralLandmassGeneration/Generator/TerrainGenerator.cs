@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using ProceduralLandmassGeneration.Data;
+using ProceduralLandmassGeneration.Generator.Mesh;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-namespace ProceduralLandmassGeneration {
+namespace ProceduralLandmassGeneration.Generator {
     public class TerrainGenerator : MonoBehaviour {
         private const float VIEWER_MOVE_THRESHOLD_FOR_CHUNK_UPDATE = 25f;
 
@@ -14,10 +16,13 @@ namespace ProceduralLandmassGeneration {
 
         public MeshSettings meshSettings;
         public HeightMapSettings heightMapSettings;
-        public TextureData textureSettings;
+        // public TextureData textureSettings;
 
         public Transform viewer;
         public Material mapMaterial;
+        public IMeshGenerator MeshGenerator;
+
+        public List<BlockType> blockTypes = new List<BlockType>();
 
         private Vector2 _viewerPosition2DOld;
 
@@ -26,12 +31,13 @@ namespace ProceduralLandmassGeneration {
 
         private readonly Dictionary<Vector2, TerrainChunk> _terrainChunkDictionary =
             new Dictionary<Vector2, TerrainChunk>();
-
         private readonly List<TerrainChunk> _visibleTerrainChunksList = new List<TerrainChunk>();
 
         private void Start() {
-            textureSettings.ApplyToMaterial(mapMaterial);
-            textureSettings.UpdateMeshHeights(mapMaterial, heightMapSettings.minHeight, heightMapSettings.maxHeight);
+            // textureSettings.ApplyToMaterial(mapMaterial);
+            // textureSettings.UpdateMeshHeights(mapMaterial, heightMapSettings.minHeight, heightMapSettings.maxHeight);
+
+            MeshGenerator = GetComponent<IMeshGenerator>();
 
             float maxViewDst = detailLevels[detailLevels.Length - 1].visibleDstThreshold;
             _meshWorldSize = meshSettings.MeshWorldSize;
@@ -83,9 +89,7 @@ namespace ProceduralLandmassGeneration {
                             if (_terrainChunkDictionary.ContainsKey(viewedChunkCoord)) {
                                 _terrainChunkDictionary[viewedChunkCoord].UpdateTerrainChunk();
                             } else {
-                                TerrainChunk newChunk = new TerrainChunk(viewedChunkCoord, heightMapSettings,
-                                    meshSettings,
-                                    detailLevels, colliderLODIndex, transform, viewer, mapMaterial);
+                                TerrainChunk newChunk = new TerrainChunk(viewedChunkCoord, this);
                                 _terrainChunkDictionary.Add(viewedChunkCoord, newChunk);
                                 newChunk.OnVisibilityChanged += OnTerrainChunkVisibilityChanged;
                                 newChunk.RequestHeightMap();
@@ -120,5 +124,41 @@ namespace ProceduralLandmassGeneration {
         public float visibleDstThreshold;
 
         public float SqrVisibleDstThreshold => visibleDstThreshold * visibleDstThreshold;
+    }
+
+    [System.Serializable]
+    public class BlockType {
+        public string blockName;
+        public bool isSolid;
+
+        [Header("Texture Values")] 
+        public Vector2Int positiveYTexture;
+        public Vector2Int negativeYTexture;
+        public Vector2Int positiveZTexture;
+        public Vector2Int negativeZTexture;
+        public Vector2Int positiveXTexture;
+        public Vector2Int negativeXTexture;
+
+        // Back, Front, Top, Bottom, Left, Right
+
+        public Vector2Int GetTextureID(int faceIndex) {
+            switch (faceIndex) {
+                case 0:
+                    return positiveYTexture;
+                case 1:
+                    return negativeYTexture;
+                case 2:
+                    return positiveZTexture;
+                case 3:
+                    return negativeZTexture;
+                case 4:
+                    return positiveXTexture;
+                case 5:
+                    return negativeXTexture;
+                default:
+                    Debug.Log("Error in GetTextureID; invalid face index");
+                    return Vector2Int.zero;
+            }
+        }
     }
 }

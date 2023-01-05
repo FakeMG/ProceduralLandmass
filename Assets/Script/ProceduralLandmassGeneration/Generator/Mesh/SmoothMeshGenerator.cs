@@ -3,12 +3,12 @@ using UnityEngine;
 
 namespace ProceduralLandmassGeneration.Generator.Mesh {
     public static class MeshGenerator {
-        public static MeshData GenerateMeshData(float[,] heightMap, MeshSettings meshSettings, int levelOfDetail) {
+        public static SmoothMeshData GenerateMeshData(float[,] heightMap, MeshSettings meshSettings, int levelOfDetail) {
             int skipIncrement = (levelOfDetail == 0) ? 1 : levelOfDetail * 2;
             int numVertsPerLine = meshSettings.NumVertsPerLine;
             Vector2 topLeftOfMesh = new Vector2(-1, 1) * meshSettings.MeshWorldSize / 2;
 
-            MeshData meshData = new MeshData(numVertsPerLine, skipIncrement, meshSettings.useFlatShading);
+            SmoothMeshData smoothMeshData = new SmoothMeshData(numVertsPerLine, skipIncrement, meshSettings.useFlatShading);
             
             int[,] vertexIndicesMap = new int[numVertsPerLine, numVertsPerLine];
             int meshVertexIndex = 0;
@@ -18,10 +18,10 @@ namespace ProceduralLandmassGeneration.Generator.Mesh {
 
             CalculateMeshData();
 
-            meshData.ProcessMesh();
+            smoothMeshData.ProcessMesh();
 
             // return meshData because unity API can only work in main thread
-            return meshData;
+            return smoothMeshData;
 
             void SetupVertexIndicesMap() {
                 for (int y = 0; y < numVertsPerLine; y++) {
@@ -98,7 +98,7 @@ namespace ProceduralLandmassGeneration.Generator.Mesh {
                                  heightMainVertexB * dstPercentFromAToB;
                     }
 
-                    meshData.AddVertex(new Vector3(vertexPosition2D.x, height, vertexPosition2D.y), percent,
+                    smoothMeshData.AddVertex(new Vector3(vertexPosition2D.x, height, vertexPosition2D.y), percent,
                         vertexIndex);
                 }
 
@@ -115,8 +115,8 @@ namespace ProceduralLandmassGeneration.Generator.Mesh {
                         int b = vertexIndicesMap[x + currentIncrement, y];
                         int c = vertexIndicesMap[x, y + currentIncrement];
                         int d = vertexIndicesMap[x + currentIncrement, y + currentIncrement];
-                        meshData.AddTriangle(a, d, c);
-                        meshData.AddTriangle(d, a, b);
+                        smoothMeshData.AddTriangle(a, d, c);
+                        smoothMeshData.AddTriangle(d, a, b);
                     }
                 }
             }

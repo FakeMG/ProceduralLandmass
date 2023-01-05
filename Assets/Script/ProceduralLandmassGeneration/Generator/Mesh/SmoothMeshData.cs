@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace ProceduralLandmassGeneration.Generator.Mesh {
-    public class MeshData {
+    public class SmoothMeshData : IMeshData {
         // The negative numbers are the border vertices
         // -1  -2  -3  -4  -5
         // -6   0   1   2  -7
@@ -13,10 +12,6 @@ namespace ProceduralLandmassGeneration.Generator.Mesh {
         private readonly int[] _triangles;
         private Vector2[] _uvs;
         private Vector3[] _bakedNormalsArray;
-        
-        List<Vector3> verts = new List<Vector3>();
-        List<int> tris = new List<int>();
-        List<Vector2> uvs = new List<Vector2>();
 
         // outOfMeshVertices only contains negative value
         private readonly Vector3[] _outOfMeshVertices;
@@ -29,13 +24,8 @@ namespace ProceduralLandmassGeneration.Generator.Mesh {
         private int _outOfMeshTriangleIndex;
 
         private readonly bool _useFlatShading;
-
-        public MeshData(List<Vector3> verts, List<int> tris) {
-            this.verts = verts;
-            this.tris = tris;
-        }
         
-        public MeshData(int numVertsPerLine, int skipIncrement, bool useFlatShading) {
+        public SmoothMeshData(int numVertsPerLine, int skipIncrement, bool useFlatShading) {
             _useFlatShading = useFlatShading;
 
             int numMeshEdgeVertices = (numVertsPerLine - 2) * 4 - 4;
@@ -166,29 +156,19 @@ namespace ProceduralLandmassGeneration.Generator.Mesh {
             _uvs = flatShadedUvs;
         }
 
-        // public UnityEngine.Mesh CreateMesh() {
-        //     UnityEngine.Mesh mesh = new UnityEngine.Mesh {
-        //         vertices = _vertices,
-        //         triangles = _triangles,
-        //         uv = _uvs
-        //     };
-        //     
-        //     if (_useFlatShading) {
-        //         mesh.RecalculateNormals();
-        //     } else {
-        //         mesh.normals = _bakedNormalsArray;
-        //     }
-        //
-        //     return mesh;
-        // }
-        
         public UnityEngine.Mesh CreateMesh() {
             UnityEngine.Mesh mesh = new UnityEngine.Mesh {
-                vertices = verts.ToArray(),
-                triangles = tris.ToArray()
+                vertices = _vertices,
+                triangles = _triangles,
+                uv = _uvs
             };
-
-            mesh.RecalculateNormals();
+            
+            if (_useFlatShading) {
+                mesh.RecalculateNormals();
+            } else {
+                mesh.normals = _bakedNormalsArray;
+            }
+        
             return mesh;
         }
     }

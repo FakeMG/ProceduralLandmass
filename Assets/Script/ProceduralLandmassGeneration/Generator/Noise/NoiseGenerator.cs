@@ -1,7 +1,7 @@
 using UnityEngine;
 
-namespace ProceduralLandmassGeneration.NoiseGenerator {
-    public static class Noise {
+namespace ProceduralLandmassGeneration.Generator.Noise {
+    public static class NoiseGenerator {
         public enum NormalizeMode {
             Local,
             Global
@@ -88,7 +88,7 @@ namespace ProceduralLandmassGeneration.NoiseGenerator {
 
     [System.Serializable]
     public class NoiseSettings {
-        public Noise.NormalizeMode normalizeMode;
+        public NoiseGenerator.NormalizeMode normalizeMode;
         public float scale = 50;
         public Vector2 offset;
 

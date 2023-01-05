@@ -4,12 +4,12 @@ namespace ProceduralLandmassGeneration.Data {
     [CreateAssetMenu()]
     public class MeshSettings : UpdatableData {
         public const int NUM_SUPPORTED_LODS = 5;
-        
+
         private const int NUM_SUPPORTED_CHUNK_SIZES = 9;
         private const int NUM_SUPPORTED_FLAT_SHADED_CHUNK_SIZES = 3;
 
         private static readonly int[]
-            SupportedChunkSizes = {16, 48, 72, 96, 120, 144, 168, 192, 216, 240 }; //space between vertices
+            SupportedChunkSizes = { 16, 48, 72, 96, 120, 144, 168, 192, 216, 240 }; //space between vertices
 
         [Range(0, NUM_SUPPORTED_CHUNK_SIZES - 1)]
         public int chunkSizeIndex;

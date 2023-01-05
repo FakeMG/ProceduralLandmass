@@ -1,6 +1,6 @@
 ﻿using ProceduralLandmassGeneration.Data;
 using ProceduralLandmassGeneration.Generator;
-using ProceduralLandmassGeneration.NoiseGenerator;
+using ProceduralLandmassGeneration.Generator.Noise;
 using ProceduralLandmassGeneration.Generator.Mesh;
 using UnityEngine;
 
@@ -55,8 +55,8 @@ namespace ProceduralLandmassGeneration {
             meshFilter.gameObject.SetActive(false);
         }
 
-        public void DrawMesh(MeshData meshData) {
-            meshFilter.sharedMesh = meshData.CreateMesh();
+        public void DrawMesh(SmoothMeshData smoothMeshData) {
+            meshFilter.sharedMesh = smoothMeshData.CreateMesh();
 
             textureRender.gameObject.SetActive(false);
             meshFilter.gameObject.SetActive(true);
