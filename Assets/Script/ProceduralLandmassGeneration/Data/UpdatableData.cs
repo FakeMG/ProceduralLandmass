@@ -19,6 +19,6 @@ namespace ProceduralLandmassGeneration.Data {
                 OnValuesUpdated();
             }
         }
-    }
 #endif
+    }
 }

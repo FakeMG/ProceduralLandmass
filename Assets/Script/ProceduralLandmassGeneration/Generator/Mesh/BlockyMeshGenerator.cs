@@ -12,7 +12,6 @@ namespace ProceduralLandmassGeneration.Generator.Mesh {
         
         private int _chunkHeight;
         private int _chunkWidth;
-        private int _baseLandLevel;
 
         private void Start() {
             _terrainGenerator = GetComponent<TerrainGenerator>();
@@ -23,20 +22,15 @@ namespace ProceduralLandmassGeneration.Generator.Mesh {
             
             _chunkHeight = 64;
             _chunkWidth = (int)_meshSettings.MeshWorldSize + 2;
-            _baseLandLevel = _chunkHeight / 2;
         }
 
-        public IMeshData GenerateMeshData(float[,] heightMap) {
-            int[,,] blocks = new int[_chunkWidth, _chunkHeight, _chunkWidth];
-
+        public IMeshData GenerateMeshData(byte[,,] blocksData) {
             List<Vector3> verts = new List<Vector3>();
             List<int> tris = new List<int>();
             List<Vector2> uv = new List<Vector2>();
 
             // cần phải build mesh từ +z -> -z để lấy đối xứng với noiseMap
             Vector3 topLeftOfMesh = new Vector3(-1 * (_chunkWidth - 2) / 2.0f, 0, 1 * (_chunkWidth - 2) / 2.0f);
-
-            PopulateBlocksData();
 
             for (int x = 1; x < _chunkWidth - 1; x++) {
                 for (int y = 0; y < _chunkHeight; y++) {
@@ -57,7 +51,7 @@ namespace ProceduralLandmassGeneration.Generator.Mesh {
                                                       VoxelData.VerticesIndicesOfFace[direction, index]]);
                                     }
 
-                                    AddTexture(_blockTypes[blocks[x,y,z]].GetTextureID(direction));
+                                    AddTexture(_blockTypes[blocksData[x,y,z]].GetTextureID(direction));
 
                                     int tl = verts.Count - 4;
                                     tris.AddRange(new[] {
@@ -73,20 +67,6 @@ namespace ProceduralLandmassGeneration.Generator.Mesh {
             BlockyMeshData blockyMeshData = new BlockyMeshData(verts, tris, uv);
             return blockyMeshData;
 
-            void PopulateBlocksData() {
-                for (int x = 0; x < _chunkWidth; x++) {
-                    for (int y = 0; y < _chunkHeight; y++) {
-                        for (int z = 0; z < _chunkWidth; z++) {
-                            if (y <= _baseLandLevel + heightMap[x, z]) {
-                                blocks[x, y, z] = 1;
-                            } else {
-                                blocks[x, y, z] = 0;
-                            }
-                        }
-                    }
-                }
-            }
-
             bool IsTransparent(Vector3 index) {
                 int x = Mathf.FloorToInt(index.x);
                 int y = Mathf.FloorToInt(index.y);
@@ -96,7 +76,7 @@ namespace ProceduralLandmassGeneration.Generator.Mesh {
                     return true;
                 }
 
-                return !_blockTypes[blocks[x, y, z]].isSolid;
+                return !_blockTypes[blocksData[x, y, z]].isSolid;
             }
 
             void AddTexture(Vector2Int texturePos) {

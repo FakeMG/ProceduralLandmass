@@ -24,6 +24,6 @@ namespace ProceduralLandmassGeneration.Data {
 
             base.OnValidate();
         }
-    }
 #endif
+    }
 }

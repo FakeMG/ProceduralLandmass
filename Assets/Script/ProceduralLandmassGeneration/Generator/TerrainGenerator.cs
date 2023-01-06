@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ProceduralLandmassGeneration.Data;
 using ProceduralLandmassGeneration.Generator.Mesh;
 using UnityEngine;
@@ -15,7 +16,8 @@ namespace ProceduralLandmassGeneration.Generator {
         public LODInfo[] detailLevels;
 
         public MeshSettings meshSettings;
-        public HeightMapSettings heightMapSettings;
+        public HeightMapSettings worldHeightMapSettings;
+        public HeightMapSettings treeHeightMapSettings;
         // public TextureData textureSettings;
 
         public Transform viewer;
@@ -114,9 +116,25 @@ namespace ProceduralLandmassGeneration.Generator {
                 return new Vector2(viewerPosition.x, viewerPosition.z);
             }
         }
+
+        public TerrainChunk GetChunkByWorldPos(Vector2 pos) {
+            int currentChunkCoordX = Mathf.RoundToInt(pos.x / _meshWorldSize);
+            int currentChunkCoordY = Mathf.RoundToInt(pos.y / _meshWorldSize);
+            Vector2 chunkCoord = new Vector2(currentChunkCoordX, currentChunkCoordY);
+            
+            if (_terrainChunkDictionary.ContainsKey(chunkCoord)) {
+                return _terrainChunkDictionary[chunkCoord];
+            }
+
+            TerrainChunk newChunk = new TerrainChunk(chunkCoord, this);
+            _terrainChunkDictionary.Add(chunkCoord, newChunk);
+            newChunk.OnVisibilityChanged += OnTerrainChunkVisibilityChanged;
+            newChunk.RequestHeightMap();
+            return newChunk;
+        }
     }
 
-    [System.Serializable]
+    [Serializable]
     public struct LODInfo {
         [Range(0, MeshSettings.NUM_SUPPORTED_LODS - 1)]
         public int lod;
@@ -126,7 +144,7 @@ namespace ProceduralLandmassGeneration.Generator {
         public float SqrVisibleDstThreshold => visibleDstThreshold * visibleDstThreshold;
     }
 
-    [System.Serializable]
+    [Serializable]
     public class BlockType {
         public string blockName;
         public bool isSolid;

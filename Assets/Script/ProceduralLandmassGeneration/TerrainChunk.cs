@@ -12,13 +12,13 @@ namespace ProceduralLandmassGeneration.Generator {
 
         private const float COLLIDER_GENERATION_DISTANCE_THRESHOLD = 5;
 
-        private readonly GameObject _meshObject;
         private readonly Vector2 _sampleCenter;
+        private readonly float _maxViewDst;
         private Bounds _bounds;
 
+        private readonly GameObject _meshObject;
         private readonly MeshFilter _meshFilter;
         private readonly MeshCollider _meshCollider;
-        private readonly IMeshGenerator _meshGenerator;
 
         private readonly LODInfo[] _detailLevels;
         private LODMesh[] _lodMeshes;
@@ -27,18 +27,24 @@ namespace ProceduralLandmassGeneration.Generator {
 
         private HeightMap _heightMap;
         private bool _heightMapReceived;
-        private bool _hasSetCollider;
-        private readonly float _maxViewDst;
 
-        private readonly HeightMapSettings _heightMapSettings;
+        private byte[,,] _blocksData;
+        private bool _blocksDataReceived;
+
+        private bool _hasSetCollider;
+
+        private readonly HeightMapSettings _worldHeightMapSettings;
+        private readonly HeightMapSettings _treeHeightMapSettings;
         private readonly MeshSettings _meshSettings;
         private readonly Transform _viewer;
+        private readonly IMeshGenerator _meshGenerator;
 
         public TerrainChunk(Vector2 coord, TerrainGenerator terrainGenerator) {
             Coord = coord;
             _detailLevels = terrainGenerator.detailLevels;
             _colliderLODIndex = terrainGenerator.colliderLODIndex;
-            _heightMapSettings = terrainGenerator.heightMapSettings;
+            _worldHeightMapSettings = terrainGenerator.worldHeightMapSettings;
+            _treeHeightMapSettings = terrainGenerator.treeHeightMapSettings;
             _meshSettings = terrainGenerator.meshSettings;
             _viewer = terrainGenerator.viewer;
 
@@ -53,7 +59,6 @@ namespace ProceduralLandmassGeneration.Generator {
             meshRenderer.material = terrainGenerator.mapMaterial;
             _meshFilter = _meshObject.AddComponent<MeshFilter>();
             _meshCollider = _meshObject.AddComponent<MeshCollider>();
-
             _meshObject.transform.position = new Vector3(chunkWorldPosition.x, 0, chunkWorldPosition.y);
             _meshObject.transform.parent = terrainGenerator.transform;
             SetVisible(false);
@@ -77,19 +82,53 @@ namespace ProceduralLandmassGeneration.Generator {
             ThreadedDataRequester.RequestData(
                 () => HeightMapGenerator.GenerateHeightMap((int)_meshSettings.MeshWorldSize + 2,
                     (int)_meshSettings.MeshWorldSize + 2,
-                    _heightMapSettings, _sampleCenter), OnHeightMapReceived);
+                    _worldHeightMapSettings, _sampleCenter), OnHeightMapReceived);
         }
 
 
         private void OnHeightMapReceived(object heightMapObject) {
             _heightMap = (HeightMap)heightMapObject;
             _heightMapReceived = true;
+            RequestBlocksData();
+        }
+        
+        public void RequestBlocksData() {
+            ThreadedDataRequester.RequestData(
+                () => PopulateBlocksData(_heightMap.Values), OnBlocksDataReceived);
+        }
+        
+        private void OnBlocksDataReceived(object blocksData) {
+            _blocksData = (byte[,,])blocksData;
+            _blocksDataReceived = true;
 
             UpdateTerrainChunk();
         }
+        
+        byte[,,] PopulateBlocksData(float[,] heightMap) {
+            int chunkHeight = 64;
+            int chunkWidth = (int)_meshSettings.MeshWorldSize + 2;
+            int baseLandLevel = chunkHeight / 2;
+            byte[,,] blocksData = new byte[chunkWidth, chunkHeight, chunkWidth];
+            
+            for (int x = 0; x < chunkWidth; x++) {
+                for (int y = 0; y < chunkHeight; y++) {
+                    for (int z = 0; z < chunkWidth; z++) {
+                        if (y < Mathf.FloorToInt( baseLandLevel + heightMap[x, z])) {
+                            blocksData[x, y, z] = 1;
+                        } else if (y == Mathf.FloorToInt( baseLandLevel + heightMap[x, z])) {
+                            blocksData[x, y, z] = 2;
+                        } else {
+                            blocksData[x, y, z] = 0;
+                        }
+                    }
+                }
+            }
+
+            return blocksData;
+        }
 
         public void UpdateTerrainChunk() {
-            if (!_heightMapReceived) return;
+            if (!_heightMapReceived || !_blocksDataReceived) return;
 
             bool wasVisible = IsVisible();
             bool visible = SqrDstFromViewerToEdge <= _maxViewDst * _maxViewDst;
@@ -116,7 +155,7 @@ namespace ProceduralLandmassGeneration.Generator {
                             _previousLODIndex = lodIndex;
                             _meshFilter.mesh = lodMesh.Mesh;
                         } else if (!lodMesh.HasRequestedMesh) {
-                            lodMesh.RequestMesh(_heightMap, _meshGenerator);
+                            lodMesh.RequestMesh(_blocksData, _meshGenerator);
                         }
                     }
                 }
@@ -131,6 +170,7 @@ namespace ProceduralLandmassGeneration.Generator {
         }
 
         public void UpdateCollisionMesh() {
+            if (!_heightMapReceived || !_blocksDataReceived) return;
             if (_hasSetCollider) return;
 
             RequestMeshIfPlayerInRange();
@@ -141,7 +181,7 @@ namespace ProceduralLandmassGeneration.Generator {
             void RequestMeshIfPlayerInRange() {
                 if (SqrDstFromViewerToEdge < _detailLevels[_colliderLODIndex].SqrVisibleDstThreshold) {
                     if (!_lodMeshes[_colliderLODIndex].HasRequestedMesh) {
-                        _lodMeshes[_colliderLODIndex].RequestMesh(_heightMap, _meshGenerator);
+                        _lodMeshes[_colliderLODIndex].RequestMesh(_blocksData, _meshGenerator);
                     }
                 }
             }
@@ -192,11 +232,11 @@ namespace ProceduralLandmassGeneration.Generator {
 
             UpdateCallback?.Invoke();
         }
-
-        public void RequestMesh(HeightMap heightMap, IMeshGenerator meshGenerator) {
+        
+        public void RequestMesh(byte[,,] blocksData, IMeshGenerator meshGenerator) {
             HasRequestedMesh = true;
             ThreadedDataRequester.RequestData(
-                () => meshGenerator.GenerateMeshData(heightMap.Values),
+                () => meshGenerator.GenerateMeshData(blocksData),
                 OnMeshDataReceived);
         }
     }
