@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using ProceduralLandmassGeneration.Data;
 using ProceduralLandmassGeneration.Generator.Mesh;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace ProceduralLandmassGeneration.Generator {
     public class TerrainGenerator : MonoBehaviour {
@@ -16,7 +17,9 @@ namespace ProceduralLandmassGeneration.Generator {
         public LODInfo[] detailLevels;
 
         public MeshSettings meshSettings;
-        public HeightMapSettings worldHeightMapSettings;
+        public HeightMapSettings groundHeightMapSettings;
+        public HeightMapSettings forestHeightMapSettings;
+
         public HeightMapSettings treeHeightMapSettings;
         // public TextureData textureSettings;
 
@@ -31,8 +34,11 @@ namespace ProceduralLandmassGeneration.Generator {
         private float _meshWorldSize;
         private int _chunksVisibleInViewDst;
 
+        private readonly Dictionary<Vector2, Queue<VoxelMod>> _chunkModData = new Dictionary<Vector2, Queue<VoxelMod>>();
+
         private readonly Dictionary<Vector2, TerrainChunk> _terrainChunkDictionary =
             new Dictionary<Vector2, TerrainChunk>();
+
         private readonly List<TerrainChunk> _visibleTerrainChunksList = new List<TerrainChunk>();
 
         private void Start() {
@@ -46,6 +52,8 @@ namespace ProceduralLandmassGeneration.Generator {
             _chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst / _meshWorldSize);
 
             UpdateChunksThatPlayerPassThrough();
+
+            StartCoroutine(ApplyModData());
         }
 
         private void Update() {
@@ -58,6 +66,60 @@ namespace ProceduralLandmassGeneration.Generator {
             if ((_viewerPosition2DOld - ViewerPosition2D).sqrMagnitude > SQR_VIEWER_MOVE_THRESHOLD_FOR_CHUNK_UPDATE) {
                 _viewerPosition2DOld = ViewerPosition2D;
                 UpdateChunksThatPlayerPassThrough();
+            }
+        }
+        
+        //multithreading method
+        public void AddChunkModData(VoxelMod modData) {
+            Vector3 blockWorldPos = modData.WorldPosition;
+            Vector2 chunkCoord = GetChunkCoordByWorldPos(new Vector2(blockWorldPos.x, blockWorldPos.z));
+
+            lock (_chunkModData) {
+                Queue<VoxelMod> mods;
+                if (_chunkModData.ContainsKey(chunkCoord)) {
+                    mods = _chunkModData[chunkCoord];
+                } else {
+                    mods = new Queue<VoxelMod>();
+                    _chunkModData.Add(chunkCoord, mods);
+                }
+
+                mods.Enqueue(modData);
+            }
+        }
+
+        private IEnumerator ApplyModData()
+        {
+            while (true) {
+                TransferModData();
+                UpdateMeshForChunksInRange();
+                yield return new WaitForSeconds(0.5f);
+            }
+        }
+
+        private void TransferModData() {
+            foreach (var chunkCoord in _chunkModData.Keys.ToList()) {
+                if (!_terrainChunkDictionary.ContainsKey(chunkCoord)) continue;
+                if (!_terrainChunkDictionary[chunkCoord].BlocksDataReceived) continue;
+                
+                Queue<VoxelMod> modQueue = _chunkModData[chunkCoord];
+                while (modQueue.Count > 0) {
+                    VoxelMod modData = modQueue.Dequeue();
+                    _terrainChunkDictionary[chunkCoord].Modifications.Enqueue(modData);
+                }
+            }
+        }
+
+        private void UpdateMeshForChunksInRange() {
+            int currentChunkCoordX = Mathf.RoundToInt(ViewerPosition2D.x / _meshWorldSize);
+            int currentChunkCoordY = Mathf.RoundToInt(ViewerPosition2D.y / _meshWorldSize);
+            
+            for (int yOffset = -_chunksVisibleInViewDst; yOffset <= _chunksVisibleInViewDst; yOffset++) {
+                for (int xOffset = -_chunksVisibleInViewDst; xOffset <= _chunksVisibleInViewDst; xOffset++) {
+                    Vector2 viewedChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
+                    if (_terrainChunkDictionary.ContainsKey(viewedChunkCoord)) {
+                        _terrainChunkDictionary[viewedChunkCoord].ApplyModData();
+                    }
+                }
             }
         }
 
@@ -93,6 +155,7 @@ namespace ProceduralLandmassGeneration.Generator {
                             } else {
                                 TerrainChunk newChunk = new TerrainChunk(viewedChunkCoord, this);
                                 _terrainChunkDictionary.Add(viewedChunkCoord, newChunk);
+
                                 newChunk.OnVisibilityChanged += OnTerrainChunkVisibilityChanged;
                                 newChunk.RequestHeightMap();
                             }
@@ -117,20 +180,10 @@ namespace ProceduralLandmassGeneration.Generator {
             }
         }
 
-        public TerrainChunk GetChunkByWorldPos(Vector2 pos) {
-            int currentChunkCoordX = Mathf.RoundToInt(pos.x / _meshWorldSize);
-            int currentChunkCoordY = Mathf.RoundToInt(pos.y / _meshWorldSize);
-            Vector2 chunkCoord = new Vector2(currentChunkCoordX, currentChunkCoordY);
-            
-            if (_terrainChunkDictionary.ContainsKey(chunkCoord)) {
-                return _terrainChunkDictionary[chunkCoord];
-            }
-
-            TerrainChunk newChunk = new TerrainChunk(chunkCoord, this);
-            _terrainChunkDictionary.Add(chunkCoord, newChunk);
-            newChunk.OnVisibilityChanged += OnTerrainChunkVisibilityChanged;
-            newChunk.RequestHeightMap();
-            return newChunk;
+        private Vector2 GetChunkCoordByWorldPos(Vector2 worldPos) {
+            int currentChunkCoordX = Mathf.RoundToInt(worldPos.x / _meshWorldSize);
+            int currentChunkCoordY = Mathf.RoundToInt(worldPos.y / _meshWorldSize);
+            return new Vector2(currentChunkCoordX, currentChunkCoordY);
         }
     }
 
@@ -149,8 +202,7 @@ namespace ProceduralLandmassGeneration.Generator {
         public string blockName;
         public bool isSolid;
 
-        [Header("Texture Values")] 
-        public Vector2Int positiveYTexture;
+        [Header("Texture Values")] public Vector2Int positiveYTexture;
         public Vector2Int negativeYTexture;
         public Vector2Int positiveZTexture;
         public Vector2Int negativeZTexture;
