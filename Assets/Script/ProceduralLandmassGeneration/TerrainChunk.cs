@@ -318,6 +318,7 @@ namespace ProceduralLandmassGeneration.Generator {
             }
 
             _hasAppliedMesh = false;
+            _hasSetCollider = false;
         }
 
         public void SetVisible(bool visible) {

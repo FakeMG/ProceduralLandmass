@@ -19,7 +19,6 @@ namespace ProceduralLandmassGeneration.Generator {
         public MeshSettings meshSettings;
         public HeightMapSettings groundHeightMapSettings;
         public HeightMapSettings forestHeightMapSettings;
-
         public HeightMapSettings treeHeightMapSettings;
         // public TextureData textureSettings;
 
@@ -29,16 +28,15 @@ namespace ProceduralLandmassGeneration.Generator {
 
         public List<BlockType> blockTypes = new List<BlockType>();
 
+        [SerializeField] private float transferModificationDelay = 0.25f;
         private Vector2 _viewerPosition2DOld;
 
         private float _meshWorldSize;
         private int _chunksVisibleInViewDst;
 
         private readonly Dictionary<Vector2, Queue<VoxelMod>> _chunkModData = new Dictionary<Vector2, Queue<VoxelMod>>();
-
         private readonly Dictionary<Vector2, TerrainChunk> _terrainChunkDictionary =
             new Dictionary<Vector2, TerrainChunk>();
-
         private readonly List<TerrainChunk> _visibleTerrainChunksList = new List<TerrainChunk>();
 
         private void Start() {
@@ -86,25 +84,47 @@ namespace ProceduralLandmassGeneration.Generator {
                 mods.Enqueue(modData);
             }
         }
+        
+        public void AddChunkModData(Vector2 chunkCoord, VoxelMod modData) {
+            lock (_chunkModData) {
+                Queue<VoxelMod> mods;
+                if (_chunkModData.ContainsKey(chunkCoord)) {
+                    mods = _chunkModData[chunkCoord];
+                } else {
+                    mods = new Queue<VoxelMod>();
+                    _chunkModData.Add(chunkCoord, mods);
+                }
+
+                mods.Enqueue(modData);
+            }
+        }
 
         private IEnumerator ApplyModData()
         {
             while (true) {
                 TransferModData();
                 UpdateMeshForChunksInRange();
-                yield return new WaitForSeconds(0.5f);
+                yield return new WaitForSeconds(transferModificationDelay);
             }
         }
 
         private void TransferModData() {
-            foreach (var chunkCoord in _chunkModData.Keys.ToList()) {
-                if (!_terrainChunkDictionary.ContainsKey(chunkCoord)) continue;
-                if (!_terrainChunkDictionary[chunkCoord].BlocksDataReceived) continue;
+            int currentChunkCoordX = Mathf.RoundToInt(ViewerPosition2D.x / _meshWorldSize);
+            int currentChunkCoordY = Mathf.RoundToInt(ViewerPosition2D.y / _meshWorldSize);
+
+            for (int yOffset = -_chunksVisibleInViewDst; yOffset <= _chunksVisibleInViewDst; yOffset++) {
+                for (int xOffset = -_chunksVisibleInViewDst; xOffset <= _chunksVisibleInViewDst; xOffset++) {
+                    Vector2 viewedChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
+                    if (!_chunkModData.ContainsKey(viewedChunkCoord)) continue;
+                    if (!_terrainChunkDictionary.ContainsKey(viewedChunkCoord)) continue;
+                    if (!_terrainChunkDictionary[viewedChunkCoord].BlocksDataReceived) continue;
                 
-                Queue<VoxelMod> modQueue = _chunkModData[chunkCoord];
-                while (modQueue.Count > 0) {
-                    VoxelMod modData = modQueue.Dequeue();
-                    _terrainChunkDictionary[chunkCoord].Modifications.Enqueue(modData);
+                    Queue<VoxelMod> modQueue = _chunkModData[viewedChunkCoord];
+                    while (modQueue.Count > 0) {
+                        VoxelMod modData = modQueue.Dequeue();
+                        _terrainChunkDictionary[viewedChunkCoord].Modifications.Enqueue(modData);
+                    }
+                    
                 }
             }
         }
@@ -180,7 +200,7 @@ namespace ProceduralLandmassGeneration.Generator {
             }
         }
 
-        private Vector2 GetChunkCoordByWorldPos(Vector2 worldPos) {
+        public Vector2 GetChunkCoordByWorldPos(Vector2 worldPos) {
             int currentChunkCoordX = Mathf.RoundToInt(worldPos.x / _meshWorldSize);
             int currentChunkCoordY = Mathf.RoundToInt(worldPos.y / _meshWorldSize);
             return new Vector2(currentChunkCoordX, currentChunkCoordY);

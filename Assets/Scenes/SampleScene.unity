@@ -192,6 +192,7 @@ GameObject:
   - component: {fileID: 928492479}
   - component: {fileID: 928492478}
   - component: {fileID: 928492477}
+  - component: {fileID: 928492483}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -214,7 +215,7 @@ MonoBehaviour:
   walkMaxSpeed: 4
   gravity: 30
   canSprint: 1
-  sprintMaxSpeed: 10
+  sprintMaxSpeed: 7
   sprintKey: 304
   canJump: 1
   jumpForce: 8
@@ -337,6 +338,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &928492483
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 928492476}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 329fd2779757a79448162fb5c4dd505d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  terrainGenerator: {fileID: 996944246}
+  reachDistance: 5
 --- !u!1 &996944242
 GameObject:
   m_ObjectHideFlags: 0
@@ -397,7 +412,7 @@ MonoBehaviour:
   colliderLODIndex: 0
   detailLevels:
   - lod: 0
-    visibleDstThreshold: 100
+    visibleDstThreshold: 200
   meshSettings: {fileID: 11400000, guid: b18dbf5d4a74ba948a233a2c0ef1ab9a, type: 2}
   groundHeightMapSettings: {fileID: 11400000, guid: 3b76b84532c93244d8600b276050d636, type: 2}
   forestHeightMapSettings: {fileID: 11400000, guid: 577ce156329e4b14d9c345f770e8a6c5, type: 2}
@@ -445,6 +460,7 @@ MonoBehaviour:
     negativeZTexture: {x: 1, y: 2}
     positiveXTexture: {x: 1, y: 2}
     negativeXTexture: {x: 1, y: 2}
+  transferModificationDelay: 0.25
 --- !u!114 &996944247
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -730,7 +746,7 @@ GameObject:
   - component: {fileID: 1890014264}
   m_Layer: 0
   m_Name: Camera
-  m_TagString: Untagged
+  m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
