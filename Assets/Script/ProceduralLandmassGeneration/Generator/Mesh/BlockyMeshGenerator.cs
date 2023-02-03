@@ -20,7 +20,7 @@ namespace ProceduralLandmassGeneration.Generator.Mesh {
             _textureSize = new Vector2(_terrainGenerator.mapMaterial.mainTexture.width,
                 _terrainGenerator.mapMaterial.mainTexture.height);
             
-            _chunkHeight = 64;
+            _chunkHeight = 128;
             _chunkWidth = (int)_meshSettings.MeshWorldSize + 2;
         }
 

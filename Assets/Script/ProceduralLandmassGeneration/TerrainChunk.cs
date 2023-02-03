@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ProceduralLandmassGeneration.Data;
+using ProceduralLandmassGeneration.Data.Minecraft;
 using ProceduralLandmassGeneration.Generator.Mesh;
 using UnityEngine;
 
@@ -18,6 +19,7 @@ namespace ProceduralLandmassGeneration.Generator {
         private readonly Vector2 _topLeftOfMesh;
         private readonly float _maxViewDst;
         private Bounds _bounds;
+        private Vector2 _chunkWorld2DPosition;
 
         private readonly GameObject _meshObject;
         private readonly MeshFilter _meshFilter;
@@ -65,8 +67,8 @@ namespace ProceduralLandmassGeneration.Generator {
             _sampleCenter = Coord * _meshSettings.MeshWorldSize / _meshSettings.meshScale;
             float halfOfChunk = _meshSettings.MeshWorldSize / 2;
             _topLeftOfMesh = Coord * _meshSettings.MeshWorldSize + new Vector2(-halfOfChunk, halfOfChunk);
-            Vector2 chunkWorld2DPosition = Coord * _meshSettings.MeshWorldSize;
-            _bounds = new Bounds(chunkWorld2DPosition, Vector2.one * _meshSettings.MeshWorldSize);
+            _chunkWorld2DPosition = Coord * _meshSettings.MeshWorldSize;
+            _bounds = new Bounds(_chunkWorld2DPosition, Vector2.one * _meshSettings.MeshWorldSize);
             _maxViewDst = _detailLevels[_detailLevels.Length - 1].visibleDstThreshold;
 
             _meshGenerator = terrainGenerator.MeshGenerator;
@@ -75,7 +77,7 @@ namespace ProceduralLandmassGeneration.Generator {
             meshRenderer.material = terrainGenerator.mapMaterial;
             _meshFilter = _meshObject.AddComponent<MeshFilter>();
             _meshCollider = _meshObject.AddComponent<MeshCollider>();
-            _meshObject.transform.position = new Vector3(chunkWorld2DPosition.x, 0, chunkWorld2DPosition.y);
+            _meshObject.transform.position = new Vector3(_chunkWorld2DPosition.x, 0, _chunkWorld2DPosition.y);
             _meshObject.transform.parent = terrainGenerator.transform;
             SetVisible(false);
 
@@ -136,7 +138,7 @@ namespace ProceduralLandmassGeneration.Generator {
         }
 
         byte[,,] PopulateBlocksData() {
-            int chunkHeight = 64;
+            int chunkHeight = 128;
             int chunkWidth = (int)_meshSettings.MeshWorldSize + 2;
             int baseLandLevel = chunkHeight / 2;
             byte[,,] blocksData = new byte[chunkWidth, chunkHeight, chunkWidth];
@@ -180,7 +182,7 @@ namespace ProceduralLandmassGeneration.Generator {
                                                 Vector3 localPos = new Vector3(x + j * (temp - 1), y + 6 + k,
                                                     z + j * temp);
                                                 Vector3 blockWorldPos = LocalToWorldPos(localPos);
-                                    
+
                                                 if (localPos.x <= 0 || localPos.x >= chunkWidth - 1 ||
                                                     localPos.z <= 0 || localPos.z >= chunkWidth - 1) {
                                                     _terrainGenerator.AddChunkModData(new VoxelMod(blockWorldPos, 4));
@@ -204,6 +206,49 @@ namespace ProceduralLandmassGeneration.Generator {
                     }
                 }
             }
+
+            if (_groundHeightMap.MaxValue + baseLandLevel > 80) {
+                PerlinWorm worm = new PerlinWorm(_sampleCenter,
+                    new Vector3(_chunkWorld2DPosition.x, 0, _chunkWorld2DPosition.y) + Vector3.up * (chunkHeight / 3),
+                    _groundHeightMapSettings);
+                List<Vector3> wormParts = worm.GenerateWorm();
+
+                foreach (var blockWorldPos in wormParts) {
+                    Vector3 localPos = WorldToLocalPos(blockWorldPos);
+                    
+                    if (blockWorldPos.y <= baseLandLevel + _groundHeightMap.MinValue && blockWorldPos.y > 0) {
+                        if (localPos.x <= 0 || localPos.x >= chunkWidth - 1 ||
+                            localPos.z <= 0 || localPos.z >= chunkWidth - 1) {
+                            _terrainGenerator.AddChunkModData(new VoxelMod(blockWorldPos, 0));
+                            
+                            Vector2 currentChunkCoord = _terrainGenerator.GetChunkCoordByWorldPos(new Vector2(blockWorldPos.x, blockWorldPos.z));
+                            foreach (var direction in VoxelData.DirectionsAroundBlock) {
+                                Vector3 surroundingBlock = blockWorldPos + direction;
+                                Vector2 surroundingBlock2D = new Vector2(surroundingBlock.x, surroundingBlock.z);
+                                Vector2 surroundingChunkCoord = _terrainGenerator.GetChunkCoordByWorldPos(surroundingBlock2D);
+                                
+                                if (surroundingChunkCoord != currentChunkCoord) {
+                                    _terrainGenerator.AddChunkModData(surroundingChunkCoord, new VoxelMod(blockWorldPos, 0));
+                                }
+                            }
+                            
+                        } else if (localPos.y >= 0 && localPos.y <= chunkHeight - 1) {
+                            Modifications.Enqueue(new VoxelMod(blockWorldPos, 0));
+                            
+                            foreach (var direction in VoxelData.DirectionsAroundBlock) {
+                                Vector3 surroundingBlock = blockWorldPos + direction;
+                                Vector2 surroundingBlock2D = new Vector2(surroundingBlock.x, surroundingBlock.z);
+                                Vector2 surroundingChunkCoord = _terrainGenerator.GetChunkCoordByWorldPos(surroundingBlock2D);
+                                
+                                if (surroundingChunkCoord != Coord) {
+                                    _terrainGenerator.AddChunkModData(surroundingChunkCoord, new VoxelMod(blockWorldPos, 0));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
 
             return blocksData;
         }
@@ -273,7 +318,7 @@ namespace ProceduralLandmassGeneration.Generator {
             void RequestMeshIfPlayerInRange() {
                 if (!(SqrDstFromViewerToEdge < _detailLevels[_colliderLODIndex].SqrVisibleDstThreshold)) return;
                 if (_lodMeshes[_colliderLODIndex].HasRequestedMesh) return;
-                
+
                 if (Modifications.Count == 0) {
                     _lodMeshes[_colliderLODIndex].RequestMesh(_blocksData, _meshGenerator);
                 }
@@ -283,7 +328,7 @@ namespace ProceduralLandmassGeneration.Generator {
                 if (!(SqrDstFromViewerToEdge <
                       COLLIDER_GENERATION_DISTANCE_THRESHOLD * COLLIDER_GENERATION_DISTANCE_THRESHOLD)) return;
                 if (!_lodMeshes[_colliderLODIndex].HasMesh) return;
-                
+
                 _meshCollider.sharedMesh = _lodMeshes[_colliderLODIndex].Mesh;
                 _hasSetCollider = true;
             }
@@ -337,12 +382,12 @@ namespace ProceduralLandmassGeneration.Generator {
         }
 
         private Vector3 WorldToLocalPos(Vector3 worldPos) {
+            worldPos += new Vector3(0.01f, 0, -0.01f);
             return new Vector3((int)(worldPos.x - _topLeftOfMesh.x + 1), (int)worldPos.y, -(int)(worldPos.z - _topLeftOfMesh.y - 1));
         }
 
         private Vector3 LocalToWorldPos(Vector3 localPos) {
-            //+-0.01f so that the chunk coord can be calculate correctly
-            return new Vector3(localPos.x - 1 + _topLeftOfMesh.x, localPos.y, -(localPos.z - 1) + _topLeftOfMesh.y) + new Vector3(0.01f, 0, -0.01f);
+            return new Vector3(localPos.x - 1 + _topLeftOfMesh.x, localPos.y, -(localPos.z - 1) + _topLeftOfMesh.y);
         }
     }
 
