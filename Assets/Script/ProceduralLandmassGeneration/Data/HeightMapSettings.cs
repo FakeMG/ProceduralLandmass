@@ -1,4 +1,4 @@
-using ProceduralLandmassGeneration.NoiseGenerator;
+using ProceduralLandmassGeneration.Generator.Noise;
 using UnityEngine;
 
 namespace ProceduralLandmassGeneration.Data {
@@ -24,6 +24,6 @@ namespace ProceduralLandmassGeneration.Data {
 
             base.OnValidate();
         }
-    }
 #endif
+    }
 }

@@ -1,12 +1,12 @@
 ﻿using ProceduralLandmassGeneration.Data;
-using ProceduralLandmassGeneration.NoiseGenerator;
+using ProceduralLandmassGeneration.Generator.Noise;
 using UnityEngine;
 
-namespace ProceduralLandmassGeneration {
+namespace ProceduralLandmassGeneration.Generator {
     public static class HeightMapGenerator {
         public static HeightMap GenerateHeightMap(int width, int height, HeightMapSettings heightMapSettings,
             Vector2 sampleCenter) {
-            float[,] values = Noise.GenerateNoiseMap(width, height, heightMapSettings.noiseSettings, sampleCenter);
+            float[,] values = NoiseGenerator.GenerateNoiseMap(width, height, heightMapSettings.noiseSettings, sampleCenter);
 
             // animation curve will get weird glitch if being used in multithreading
             AnimationCurve heightCurveThreadSafe = new AnimationCurve(heightMapSettings.heightCurve.keys);

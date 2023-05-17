@@ -1,5 +1,7 @@
 ﻿using ProceduralLandmassGeneration.Data;
-using ProceduralLandmassGeneration.NoiseGenerator;
+using ProceduralLandmassGeneration.Generator;
+using ProceduralLandmassGeneration.Generator.Noise;
+using ProceduralLandmassGeneration.Generator.Mesh;
 using UnityEngine;
 
 namespace ProceduralLandmassGeneration {
@@ -23,7 +25,7 @@ namespace ProceduralLandmassGeneration {
         public Material terrainMaterial;
 
 
-        [Range(0, MeshSettings.numSupportedLODs - 1)]
+        [Range(0, MeshSettings.NUM_SUPPORTED_LODS - 1)]
         public int editorPreviewLOD;
 
         public bool autoUpdate;
@@ -31,8 +33,8 @@ namespace ProceduralLandmassGeneration {
         public void DrawMapInEditor() {
             textureData.ApplyToMaterial(terrainMaterial);
             textureData.UpdateMeshHeights(terrainMaterial, heightMapSettings.minHeight, heightMapSettings.maxHeight);
-            HeightMap heightMap = HeightMapGenerator.GenerateHeightMap(meshSettings.numVertsPerLine,
-                meshSettings.numVertsPerLine, heightMapSettings, Vector2.zero);
+            HeightMap heightMap = HeightMapGenerator.GenerateHeightMap(meshSettings.NumVertsPerLine,
+                meshSettings.NumVertsPerLine, heightMapSettings, Vector2.zero);
 
             if (drawMode == DrawMode.NoiseMap) {
                 DrawTexture(TextureGenerator.TextureFromHeightMap(heightMap));
@@ -40,7 +42,7 @@ namespace ProceduralLandmassGeneration {
                 DrawMesh(MeshGenerator.GenerateMeshData(heightMap.Values, meshSettings, editorPreviewLOD));
             } else if (drawMode == DrawMode.FalloffMap) {
                 DrawTexture(TextureGenerator.TextureFromHeightMap(
-                    new HeightMap(FalloffGenerator.GenerateFalloffMap(meshSettings.numVertsPerLine), 0, 1)));
+                    new HeightMap(FalloffGenerator.GenerateFalloffMap(meshSettings.NumVertsPerLine), 0, 1)));
             }
         }
 
@@ -53,8 +55,8 @@ namespace ProceduralLandmassGeneration {
             meshFilter.gameObject.SetActive(false);
         }
 
-        public void DrawMesh(MeshData meshData) {
-            meshFilter.sharedMesh = meshData.CreateMesh();
+        public void DrawMesh(SmoothMeshData smoothMeshData) {
+            meshFilter.sharedMesh = smoothMeshData.CreateMesh();
 
             textureRender.gameObject.SetActive(false);
             meshFilter.gameObject.SetActive(true);

@@ -3,30 +3,35 @@ using UnityEngine;
 namespace ProceduralLandmassGeneration.Data {
     [CreateAssetMenu()]
     public class MeshSettings : UpdatableData {
-        public const int numSupportedLODs = 5;
-        public const int numSupportedChunkSizes = 9;
-        public const int numSupportedFlatshadedChunkSizes = 3;
+        public const int NUM_SUPPORTED_LODS = 5;
 
-        public static readonly int[]
-            supportedChunkSizes = { 48, 72, 96, 120, 144, 168, 192, 216, 240 }; //space between vertices
+        private const int NUM_SUPPORTED_CHUNK_SIZES = 9;
+        private const int NUM_SUPPORTED_FLAT_SHADED_CHUNK_SIZES = 3;
 
-        [Range(0, numSupportedChunkSizes - 1)] public int chunkSizeIndex;
+        private static readonly int[]
+            SupportedChunkSizes = { 16, 48, 72, 96, 120, 144, 168, 192, 216, 240 }; //space between vertices
 
-        [Range(0, numSupportedFlatshadedChunkSizes - 1)]
-        public int flatshadedChunkSizeIndex;
+        [Range(0, NUM_SUPPORTED_CHUNK_SIZES - 1)]
+        public int chunkSizeIndex;
 
-        public float meshScale = 2f;
+        [Range(0, NUM_SUPPORTED_FLAT_SHADED_CHUNK_SIZES - 1)]
+        public int flatShadedChunkSizeIndex;
+
+        public float meshScale = 1f;
         public bool useFlatShading;
 
-        // num verts per line of mesh rendered at LOD = 0. Includes the 2 extra verts that are excluded from final mesh, but used for calculating normals
-        public int numVertsPerLine {
-            get { return supportedChunkSizes[(useFlatShading) ? flatshadedChunkSizeIndex : chunkSizeIndex] + 5; }
+        // num verts per line of mesh rendered at LOD = 0.
+        // SupportedChunkSizes is space between vertices.
+        // +3 to get the number of vertices, included 2 vertices that are used to calculate normals
+        // +2 is for ??, it makes the mesh bigger, 
+        public int NumVertsPerLine {
+            get { return SupportedChunkSizes[(useFlatShading) ? flatShadedChunkSizeIndex : chunkSizeIndex] + 2 + 3; }
         }
 
-        public float meshWorldSize {
+        public float MeshWorldSize {
             get {
                 // minus 1 to get the space between vertices, minus 2 because 2 extra verts are used for calculating normals 
-                return (numVertsPerLine - 3) * meshScale;
+                return (NumVertsPerLine - 3) * meshScale;
             }
         }
     }

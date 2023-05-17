@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace ProceduralLandmassGeneration.NoiseGenerator {
+namespace ProceduralLandmassGeneration.Generator.Noise {
     public class FalloffGenerator {
         public static float[,] GenerateFalloffMap(int size) {
             float[,] map = new float[size, size];

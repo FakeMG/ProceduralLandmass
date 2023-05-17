@@ -29,11 +29,9 @@ namespace ProceduralLandmassGeneration {
         }
 
         private void Update() {
-            if (_dataQueue.Count > 0) {
-                for (int i = 0; i < _dataQueue.Count; i++) {
-                    ThreadInfo threadInfo = _dataQueue.Dequeue();
-                    threadInfo.Callback(threadInfo.Parameter);
-                }
+            while (_dataQueue.Count > 0) {
+                ThreadInfo threadInfo = _dataQueue.Dequeue();
+                threadInfo.Callback(threadInfo.Parameter);
             }
         }
     }

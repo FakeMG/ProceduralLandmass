@@ -1,7 +1,7 @@
 using UnityEngine;
 
-namespace ProceduralLandmassGeneration.NoiseGenerator {
-    public static class Noise {
+namespace ProceduralLandmassGeneration.Generator.Noise {
+    public static class NoiseGenerator {
         public enum NormalizeMode {
             Local,
             Global
@@ -84,11 +84,47 @@ namespace ProceduralLandmassGeneration.NoiseGenerator {
 
             return noiseMap;
         }
+
+        public static float GetNoise(NoiseSettings noiseSettings, Vector2 point) {
+            // offset
+            System.Random prng = new System.Random(noiseSettings.seed);
+            Vector2[] octaveOffsets = new Vector2[noiseSettings.octaves];
+
+            float amplitude = 1;
+            float frequency;
+
+            for (int i = 0; i < noiseSettings.octaves; i++) {
+                float offsetX = prng.Next(-100000, 100000) + noiseSettings.offset.x + point.x;
+                float offsetY = prng.Next(-100000, 100000) - noiseSettings.offset.y - point.y;
+                octaveOffsets[i] = new Vector2(offsetX, offsetY);
+
+                // perlinValue = 1
+                amplitude *= noiseSettings.persistance;
+            }
+
+            amplitude = 1;
+            frequency = 1;
+            float noiseHeight = 0;
+
+            for (int i = 0; i < noiseSettings.octaves; i++) {
+                float sampleX = (octaveOffsets[i].x) / noiseSettings.scale * frequency;
+                float sampleY = (octaveOffsets[i].y) / noiseSettings.scale * frequency;
+
+                float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
+                noiseHeight += perlinValue * amplitude;
+
+                amplitude *= noiseSettings.persistance;
+                frequency *= noiseSettings.lacunarity;
+            }
+
+            return noiseHeight;
+        }
     }
+
 
     [System.Serializable]
     public class NoiseSettings {
-        public Noise.NormalizeMode normalizeMode;
+        public NoiseGenerator.NormalizeMode normalizeMode;
         public float scale = 50;
         public Vector2 offset;
 
